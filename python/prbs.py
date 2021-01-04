@@ -3,15 +3,11 @@ def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=
     if pseudo_random_state == 'user_define':
         pseudo_random_sequence = real_calculate_prbs(init_value, expression)
     else:
-        pseudo_random_dict = {'prbs_7': ['1111111', [7, 6]],
-                              'prbs_9': ['111110101', [9, 5]],
-                              'prbs_15': ['111110101101110', [15, 14]],
-                              'prbs_16': ['1111101011011100', [16, 12, 3, 1]],
-                              'prbs_20': ['11111010110111001011', [20, 3]],
-                              'prbs_21': ['111110101101110010111', [21, 2]],
-                              #'prbs_23': ['11111010110111001011101', [23, 18]],
-                              'prbs_23': ['01011010100001010100001', [23, 18]],
-                              'prbs_31': ['1111111111110101110000000000000', [31, 28]]}
+        pseudo_random_dict = {'prbs_7': [0xff, [7, 6]],
+                              'prbs_9': [0x1f5, [9, 5]],
+                              'prbs_15': [0x7d6e, [15, 14]],
+                              'prbs_23': [0x7d6e5d, [23, 18]],
+                              'prbs_31': [0x7ffae000, [31, 28]]}
         pseudo_random_sequence = real_calculate_prbs(pseudo_random_dict[pseudo_random_state][0],
                                                      pseudo_random_dict[pseudo_random_state][1],
                                                      length)
@@ -20,7 +16,11 @@ def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=
 def real_calculate_prbs(value, expression, length):
 
     #
-    value_list = [int(i) for i in list(value)]
+    get_bin = lambda x, n: format(x, 'b').zfill(n)
+    prbs_len = expression[0]
+    value_bin = get_bin(value,prbs_len)[0:prbs_len]
+    value_list = [int(i) for i in list(value_bin)]
+    print(value_list)
     #
     #pseudo_random_length = (2 << (len(value) - 1))-1
     pseudo_random_length = length 
@@ -42,13 +42,26 @@ def real_calculate_prbs(value, expression, length):
 
     return sequence
 
+def bin2hex(bin_list,out_len):
+    total_len = len(bin_list)
+    grp_num = (total_len+out_len-1)//out_len
+    rtn_list=[]
+    for i in range(grp_num):
+        grp_char = ''.join([str(elem) for elem in bin_list[i*out_len:(i+1)*out_len]])
+        grp_hex = '{0:#{fill}{width}x}'.format(int(grp_char,2), fill='0', width=(out_len//4+2))
+        rtn_list.append(grp_hex)
+        #print('{0:#{fill}{width}x}'.format(int(grp_char,2), fill='0', width=(out_len//4+2)))
+
+    return rtn_list
+
 if __name__ == '__main__':
     #result_data = generate_prbs('user_define', '1111', [4, 1])
     #result_data = generate_prbs('user_define', '1111111', [7, 3])
-    #result_data = generate_prbs('prbs_31',length=80)
-    result_data = generate_prbs('prbs_23',length=80)
+    result_data = generate_prbs('prbs_31',length=80)
+    #result_data = generate_prbs('prbs_23',length=80)
     #result_data = generate_prbs('prbs_7',length=80)
-    print(result_data)
+    result_hex = bin2hex(result_data,16)
+    print(result_hex)
     #print(result_data[0:40])
 
     '''
