@@ -1,3 +1,6 @@
+#!/user/bin/python
+import sys, getopt
+
 def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=10):
 
     if pseudo_random_state == 'user_define':
@@ -54,29 +57,41 @@ def bin2hex(bin_list,out_len):
 
     return rtn_list
 
-if __name__ == '__main__':
+def prbs_gen(prbs_mode,prbs_len,prbs_width):
     #result_data = generate_prbs('user_define', '1111', [4, 1])
     #result_data = generate_prbs('user_define', '1111111', [7, 3])
     #result_data = generate_prbs('prbs_31',length=80)
     #result_data = generate_prbs('prbs_23',length=80)
-    result_data = generate_prbs('prbs_7',length=80)
-    result_hex = bin2hex(result_data,16)
+
+    result_data = generate_prbs(prbs_mode,length=prbs_len)
+    result_hex = bin2hex(result_data,prbs_width)
     print(result_hex)
     #print(result_data[0:40])
 
-    '''
-    result_data.reverse();
-    #result_data = result_data+result_data
-    for i in range(127):
-        #print("Start %d:%d--%d."%(i,40*i%127,(40*i+40)%167))
-        print(i)
-        result_str = ''.join(str(e) for e in result_data[0:40])
-        result_data = result_data[40:127]+result_data[0:40]
-        #print result_data
-        print(hex(int(result_str,2)))
+def cmd_help():
+    print("prbs.py --mode='prbs_7' --length=80 --width=32")
 
+def main(argv):
+    prbs_mode = 'prbs_7'
+    prbs_len = 80
+    prbs_width = 32
+    try:
+        opts, args = getopt.getopt(argv,"hl:m:w:",["length=","mode=","width="])
+    except getopt.GetoptError:
+        cmd_help()
+    for opt, arg in opts:
+        if opt == '-h':
+            cmd_help()
+            sys.exit()
+        elif opt in ("-l","--length"):
+            prbs_len = int(arg)
+        elif opt in ("-m","--mode"):
+            prbs_mode = arg
+        elif opt in ("-w","--width"):
+            prbs_width = int(arg)
 
-    result_str = ''.join(str(e) for e in result_data[0:40])
-    result_data = result_data[40:127]+result_data[0:40]
-    print(hex(int(result_str,2)))
-    '''
+    print(prbs_len)
+    prbs_gen(prbs_mode,prbs_len,prbs_width)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
