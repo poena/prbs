@@ -20,11 +20,11 @@ def real_calculate_prbs(value, expression, length):
     prbs_len = expression[0]
     value_bin = get_bin(value,prbs_len)[0:prbs_len]
     value_list = [int(i) for i in list(value_bin)]
-    print(value_list)
+    #print(value_list)
     #
     #pseudo_random_length = (2 << (len(value) - 1))-1
     pseudo_random_length = length 
-    print(pseudo_random_length)
+    #print(pseudo_random_length)
 
     sequence = []
 
@@ -57,9 +57,9 @@ def bin2hex(bin_list,out_len):
 if __name__ == '__main__':
     #result_data = generate_prbs('user_define', '1111', [4, 1])
     #result_data = generate_prbs('user_define', '1111111', [7, 3])
-    result_data = generate_prbs('prbs_31',length=80)
+    #result_data = generate_prbs('prbs_31',length=80)
     #result_data = generate_prbs('prbs_23',length=80)
-    #result_data = generate_prbs('prbs_7',length=80)
+    result_data = generate_prbs('prbs_7',length=80)
     result_hex = bin2hex(result_data,16)
     print(result_hex)
     #print(result_data[0:40])
