@@ -1,4 +1,10 @@
-#!/user/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# File              : prbs.py
+# Author            : Changsong Li <poena@163.com>
+# Date              : 10.01.2021
+# Last Modified Date: 10.01.2021
+# Last Modified By  : Changsong Li <poena@163.com>
 import sys, getopt
 
 def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=10):
@@ -6,7 +12,7 @@ def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=
     if pseudo_random_state == 'user_define':
         pseudo_random_sequence = real_calculate_prbs(init_value, expression)
     else:
-        pseudo_random_dict = {'prbs_7': [0xff, [7, 6]],
+        pseudo_random_dict = {'prbs_7': [0x7f, [7, 6]],
                               'prbs_9': [0x1f5, [9, 5]],
                               'prbs_15': [0x7d6e, [15, 14]],
                               'prbs_23': [0x7d6e5d, [23, 18]],
