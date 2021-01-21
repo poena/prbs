@@ -12,7 +12,7 @@ pseudo_predefine_dict = {'prbs_7': [0xff, [7, 6]],
                          'prbs_9': [0x1f5, [9, 5]],
                          'prbs_15': [0x7d6e, [15, 14]],
                          'prbs_23': ['0x7d6e5d', [23, 18]],
-                         'prbs_31': ['0x7ffae000', [31, 18]]}
+                         'prbs_31': ['0x7ffae000', [31, 28]]}
 
 def bin2hex(bin_list,out_len):
     total_len = len(bin_list)
@@ -28,30 +28,31 @@ def bin2hex(bin_list,out_len):
 
 def base_matrix_gen(prbs_type,parallel_width):
 
-    print(prbs_type)
+    #print(prbs_type)
     prbs_size = prbs_type[0]
     prbs_idx = prbs_type
 
     para_grp = (parallel_width+prbs_size-1)//prbs_size
 
-    print(prbs_size)
+    #print(prbs_size)
 
     MM = np.zeros([para_grp*prbs_size,prbs_size],dtype='int')
     A = np.eye(prbs_size,k=1,dtype='int')
     for x in prbs_idx:
         A[-1,prbs_size-x] = 1
 
-    print(A)
+    #print(A)
     #M[0:prbs_size,:] = A;
-    M = A;
+    #M = A;
     for j in range(para_grp):
         for i in range(prbs_size):
             if(i==0 and j==0):
+                print("init")
                 M = A
             else:
                 M = np.matmul(M,A)
                 M = np.mod(M,2)
-        print(M)
+        #print(M)
         MM[j*prbs_size:(j+1)*prbs_size] = M
 
     #MM = M
@@ -83,9 +84,10 @@ def prbs_next(curr_state,prbs_mode,parallel_width):
 if __name__ == '__main__':
     #base_matrix_gen(pseudo_predefine_dict['prbs_7'])
     #base_matrix_gen(pseudo_predefine_dict['prbs_23'])
-    curr_state = 0x7f
+    #curr_state = 0x7f
+    curr_state = 0x7fffffff
     for l in range(1):
-        next_state = prbs_next(curr_state,'prbs_7',80)
-        curr_state = int(next_state[-1],16)&0x7f
+        next_state = prbs_next(curr_state,'prbs_31',80)
+        curr_state = int(next_state[-1],16)&0x7fffffff
     #prbs_next(0xff,'prbs_7')
 
