@@ -8,11 +8,19 @@
 import sys, getopt
 import numpy as np
 
-pseudo_predefine_dict = {'prbs_7': [0xff, [7, 6]],
-                         'prbs_9': [0x1f5, [9, 5]],
-                         'prbs_15': [0x7d6e, [15, 14]],
-                         'prbs_23': [0x7d6e5d, [23, 18]],
-                         'prbs_31': [0x7ffae000, [31, 28]]}
+np.set_printoptions(threshold=np.inf)
+
+pseudo_predefine_dict = {'prbs_7': [0x7f, [7, 6]],
+                         'prbs_9': [0x1ff, [9, 5]],
+                         'prbs_15': [0x7fff, [15, 14]],
+                         'prbs_23': [0x7fffff, [23, 18]],
+                         'prbs_31': [0x7fffffff, [31, 28]]}
+
+def add_prbs_mode(prbs_seed,prbs_expr):
+    if(prbs_seed == None): 
+        pseudo_predefine_dict['user_define'] = [0x1, prbs_expr]
+    else:
+        pseudo_predefine_dict['user_define'] = [prbs_seed, prbs_expr]
 
 def bin2hex(bin_list,out_len):
     total_len = len(bin_list)
@@ -98,15 +106,19 @@ def prbs_gen(prbs_mode,prbs_len,init_value,prbs_width):
     #prbs_next(0xff,'prbs_7')
 
 def cmd_help():
-    print("prbs_matrix_gen.py --mode='prbs_7' --length=80 --width=32")
+    print('For pre define mode:')
+    print("  prbs_matrix_gen.py --mode='prbs_7' --length=80 --width=32")
+    print('For user_define mode:')
+    print("  prbs_matrix_gen.py --mode='user_define' --expression='[23,21,16,8,5,2]' --length=80 --width=64 --seed=0x1dbfbc")
 
 def main(argv):
     prbs_mode = 'prbs_7'
     prbs_len = 160
     prbs_width = 32
     prbs_seed = None
+    prbs_expr = None
     try:
-        opts, args = getopt.getopt(argv,"hl:m:w:s:",["length=","mode=","width=","seed="])
+        opts, args = getopt.getopt(argv,"hl:m:e:w:s:",["length=","mode=","expression=","width=","seed="])
     except getopt.GetoptError:
         cmd_help()
     for opt, arg in opts:
@@ -117,12 +129,18 @@ def main(argv):
             prbs_len = int(arg)
         elif opt in ("-m","--mode"):
             prbs_mode = arg
+        elif opt in ("-e","--expression"):
+            prbs_expr = eval(arg)
         elif opt in ("-w","--width"):
             prbs_width = int(arg)
         elif opt in ("-s","--seed"):
             prbs_seed = int(arg,16)
 
-    print([prbs_mode,prbs_len,prbs_width,prbs_seed])
+    if(prbs_mode == 'user_define'): 
+        add_prbs_mode(prbs_seed,prbs_expr)
+
+    #print([prbs_mode,prbs_len,prbs_width,prbs_seed])
+    print(f"run in mode: {prbs_mode}, length : {prbs_len}, width: {prbs_width}, expression: {prbs_expr}")
     prbs_gen(prbs_mode,prbs_len,prbs_seed,prbs_width)
 
 if __name__ == '__main__':
