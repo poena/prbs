@@ -7,12 +7,15 @@
 # Last Modified By  : Changsong Li <poena@163.com>
 import sys, getopt
 
-def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=10):
+def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=10,
+                  lfsr_type='fibonacci'):
+
+    calculate_prbs = galois_calculate_prbs if lfsr_type == 'galois' else real_calculate_prbs
 
     if pseudo_random_state == 'user_define':
         if(init_value == None):
             init_value = 0x1
-        pseudo_random_sequence = real_calculate_prbs(init_value, expression, length)
+        pseudo_random_sequence = calculate_prbs(init_value, expression, length)
     else:
         pseudo_random_dict = {'prbs_7': [0x7f, [7, 6]],
                               'prbs_9': [0x1ff, [9, 5]],
@@ -21,10 +24,10 @@ def generate_prbs(pseudo_random_state, init_value=None, expression=None, length=
                               'prbs_31': [0x7fffffff, [31, 28]]}
         if(init_value == None):
             init_value = pseudo_random_dict[pseudo_random_state][0]
-        
-        pseudo_random_sequence = real_calculate_prbs(init_value,
-                                                     pseudo_random_dict[pseudo_random_state][1],
-                                                     length)
+
+        pseudo_random_sequence = calculate_prbs(init_value,
+                                                pseudo_random_dict[pseudo_random_state][1],
+                                                length)
     return pseudo_random_sequence
 
 def real_calculate_prbs(value, expression, length):
@@ -58,6 +61,32 @@ def real_calculate_prbs(value, expression, length):
 
     return sequence
 
+def galois_calculate_prbs(value, expression, length):
+
+    print('current seed: ',hex(value))
+    prbs_len = expression[0]
+    mask = (1 << prbs_len) - 1
+
+    # Toggle mask: bit t-1 for every term of the polynomial, including the
+    # degree term itself, which is the feedback into the top bit.
+    toggle = 0
+    for t in expression:
+        toggle |= 1 << (t - 1)
+
+    state = value & mask
+    if(state == 0):
+        state = 1
+
+    sequence = []
+    for i in range(length):
+        out = state & 1
+        state >>= 1
+        if(out):
+            state ^= toggle
+        sequence.append(out)
+
+    return sequence
+
 def bin2hex(bin_list,out_len):
     total_len = len(bin_list)
     grp_num = (total_len+out_len-1)//out_len
@@ -70,13 +99,14 @@ def bin2hex(bin_list,out_len):
 
     return rtn_list
 
-def prbs_gen(prbs_mode,prbs_expr,prbs_len,init_value,prbs_width):
+def prbs_gen(prbs_mode,prbs_expr,prbs_len,init_value,prbs_width,lfsr_type='fibonacci'):
     #result_data = generate_prbs('user_define', '1111', [4, 1])
     #result_data = generate_prbs('user_define', '1111111', [7, 3])
     #result_data = generate_prbs('prbs_31',length=80)
     #result_data = generate_prbs('prbs_23',length=80)
 
-    result_data = generate_prbs(prbs_mode,init_value=init_value,expression=prbs_expr,length=prbs_len)
+    result_data = generate_prbs(prbs_mode,init_value=init_value,expression=prbs_expr,length=prbs_len,
+                                lfsr_type=lfsr_type)
     result_hex = bin2hex(result_data,prbs_width)
     print(result_hex)
     #print(result_data[0:40])
@@ -86,6 +116,8 @@ def cmd_help():
     print("  prbs.py --mode='prbs_7' --length=80 --width=32")
     print('For user_define mode:')
     print("  prbs.py --mode='user_define' --expression='[23,21,16,8,5,2]' --length=80 --width=64 --seed=0x1dbfbc")
+    print('For galois LFSR structure (default is fibonacci):')
+    print("  prbs.py --mode='prbs_7' --length=80 --width=32 --type='galois'")
 
 def main(argv):
     prbs_mode = 'prbs_7'
@@ -93,8 +125,9 @@ def main(argv):
     prbs_width = 32
     prbs_seed = None
     prbs_expr = None
+    lfsr_type = 'fibonacci'
     try:
-        opts, args = getopt.getopt(argv,"hl:m:e:w:s:",["length=","mode=","expression=","width=","seed="])
+        opts, args = getopt.getopt(argv,"hl:m:e:w:s:t:",["length=","mode=","expression=","width=","seed=","type="])
     except getopt.GetoptError:
         cmd_help()
     for opt, arg in opts:
@@ -111,10 +144,15 @@ def main(argv):
             prbs_width = int(arg)
         elif opt in ("-s","--seed"):
             prbs_seed = int(arg,16)
+        elif opt in ("-t","--type"):
+            lfsr_type = arg
+            if lfsr_type not in ('fibonacci','galois'):
+                print(f"unknown lfsr type: {lfsr_type}, expect 'fibonacci' or 'galois'")
+                sys.exit(1)
 
     #print(prbs_len)
-    print(f"run in mode: {prbs_mode}, length : {prbs_len}, width: {prbs_width}, expression: {prbs_expr}")
-    prbs_gen(prbs_mode,prbs_expr,prbs_len,prbs_seed,prbs_width)
+    print(f"run in mode: {prbs_mode}, length : {prbs_len}, width: {prbs_width}, expression: {prbs_expr}, lfsr: {lfsr_type}")
+    prbs_gen(prbs_mode,prbs_expr,prbs_len,prbs_seed,prbs_width,lfsr_type)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
